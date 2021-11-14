@@ -1,4 +1,4 @@
-package bg.unisofia.fmi.homeworks;
+package bg.unisofia.fmi.homeworks.hw3;
 
 public class City {
     public double x, y;

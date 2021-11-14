@@ -1,4 +1,4 @@
-package bg.unisofia.fmi.homeworks;
+package bg.unisofia.fmi.homeworks.hw1;
 
 import java.util.*;
 

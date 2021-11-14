@@ -1,4 +1,4 @@
-package bg.unisofia.fmi.homeworks;
+package bg.unisofia.fmi.homeworks.hw3;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -7,6 +7,11 @@ import java.util.stream.IntStream;
 public class TSP {
 
     List<City> graph;
+    int populationSize = 100;
+    int numberOfGenerations = 1000;
+    List<Integer> checkPoints = List.of(1, 100, 200, 500, 1000);
+    static double mutationProb = 0.2;
+    static double elitismCutoff = 0.3;
 
     public TSP(List<City> graph) {
         this.graph = graph;
@@ -82,26 +87,42 @@ public class TSP {
         return perm;
     }
 
-    static int populationSize = 100;
-    static int numberOfGenerations = 1000;
+    public void mutate(List<List<Integer>>population){
+        Random rng = new Random();
+        for(var individual : population){
+            if(rng.nextFloat() < mutationProb){
+                int p1 = rng.nextInt(individual.size());
+                int p2 = rng.nextInt(individual.size());
+                int x1 = individual.get(p1);
+                int x2 = individual.get(p2);
+                individual.set(p1, x2);
+                individual.set(p2, x1);
+            }
+        }
+    }
 
     public List<Integer> optimize() {
         List<List<Integer>> population = new ArrayList<>();
         for(int i = 0; i < populationSize; i++){
             population.add(randomPerm(graph.size()));
         }
-        for(int i = 0; i < numberOfGenerations; i++){
-            List<List<Integer>>selected = rouletteSelection(population, populationSize);
-            List<List<Integer>>nextGeneration = new ArrayList<>();
-
-            for(List<Integer> s1 : selected){
-                for(List<Integer> s2 : selected){
-                    List<Integer> child = crossover(s1, s2);
-                    nextGeneration.add(child);
-                }
+        for(int i = 1; i <= numberOfGenerations; i++){
+            sortByFitness(population);
+            double bestDistance = calculatePathLength(population.get(population.size()-1));
+            if(checkPoints.contains(i)){
+                System.out.printf("Shortest path length in population number %d: %f\n" , i,  bestDistance);
             }
-            sortByFitness(nextGeneration);
-            population = nextGeneration.subList(nextGeneration.size() - populationSize, nextGeneration.size());
+            List<List<Integer>>nextGeneration = new ArrayList<>();
+            int elitismCount = (int) (elitismCutoff * population.size());
+            nextGeneration.addAll(population.subList(population.size() - elitismCount, population.size()));
+            List<List<Integer>>selected = rouletteSelection(population, populationSize);
+            for(int j = 0; j < selected.size(); j++){
+                var p1 = selected.get(j);
+                var p2 = selected.get(selected.size()-1-j);
+                nextGeneration.add(crossover(p1, p2));
+            }
+            mutate(population);
+            population = nextGeneration;
         }
         return population.get(populationSize-1);
     }
@@ -110,7 +131,7 @@ public class TSP {
         list.sort(Comparator.comparingDouble(this::fitness));
     }
 
-    public static void main(String[] args) {
+    public static void testOnCities(){
         List<City> cities = new ArrayList<>();
         cities.add(new City(0.190032E-03, -0.285946E-03, "Aberystwyth"));
         cities.add(new City(383.458, -0.608756E-03, "Brighton"));
@@ -127,6 +148,20 @@ public class TSP {
 
         TSP tsp = new TSP(cities);
         var res = tsp.optimize();
-        System.out.println(tsp.calculatePathLength(res));
+    }
+
+    public static void testOnRandomInstance(){
+        Random rng = new Random();
+        List<City>cities = new ArrayList<>();
+        for(int i = 0; i < 100; i++){
+            cities.add(new City(rng.nextFloat()*100, rng.nextFloat()*100, String.valueOf(i)));
+        }
+        TSP tsp = new TSP(cities);
+        tsp.optimize();
+    }
+
+    public static void main(String[] args) {
+        TSP.testOnRandomInstance();
+//        TSP.testOnCities();
     }
 }
