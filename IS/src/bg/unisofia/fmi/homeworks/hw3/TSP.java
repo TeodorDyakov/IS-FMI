@@ -81,6 +81,16 @@ public class TSP {
         return len;
     }
 
+    public float calculatePathLength(int[] data){
+        float len = 0;
+        for (int i = 1; i < data.length; i++) {
+            City c1 = graph.get(data[i]);
+            City c2 = graph.get(data[i - 1]);
+            len += c1.dist(c2);
+        }
+        return len;
+    }
+
     public List<Integer> randomPerm(int n){
         List<Integer> perm = IntStream.range(0, n).boxed().collect(Collectors.toList());
         Collections.shuffle(perm);
@@ -145,10 +155,28 @@ public class TSP {
         cities.add(new City(112.198, -110.561, "Nottingham"));
         cities.add(new City(306.320, -108.090, "Oxford"));
         cities.add(new City(217.343, -447.089, "Stratford"));
-
+        int data[] = new int[12];
+        for(int i = 0; i < data.length; i++){
+            data[i] = i;
+        }
         TSP tsp = new TSP(cities);
-        var res = tsp.optimize();
+        int minIdx = 0;
+        float min = Float.POSITIVE_INFINITY;
+        long cnt = 0;
+        while(Permutation.findNextPermutation(data)){
+            cnt++;
+            float len = tsp.calculatePathLength(data);
+            if(min > len){
+                min = len;
+            }
+            if(cnt % 1_000_000 == 0){
+                System.out.println(cnt);
+            }
+        }
+//        var res = tsp.optimize();
+        System.out.println(min);
     }
+
 
     public static void testOnRandomInstance(){
         Random rng = new Random();
@@ -161,7 +189,7 @@ public class TSP {
     }
 
     public static void main(String[] args) {
-        TSP.testOnRandomInstance();
-//        TSP.testOnCities();
+//        TSP.testOnRandomInstance();
+        TSP.testOnCities();
     }
 }
